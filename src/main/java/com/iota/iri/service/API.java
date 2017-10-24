@@ -155,7 +155,12 @@ public class API {
 
         final long beginningTime = System.currentTimeMillis();
         final String body = IOUtils.toString(cis, StandardCharsets.UTF_8);
-        final AbstractResponse response = process(body, exchange.getSourceAddress());
+        final AbstractResponse response;
+        if (exchange.getRequestHeaders().contains("X-IOTA-API-Version")) {
+            response = process(body, exchange.getSourceAddress());
+        } else {
+            response = ErrorResponse.create("Invalid API Version");
+        }
         sendResponse(exchange, response, beginningTime);
     }
 
