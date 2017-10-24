@@ -134,7 +134,7 @@ public class API {
                             exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, 0);
                             exchange.getResponseHeaders().put(Headers.ALLOW, allowedMethods);
                             exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Origin"), "*");
-                            exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Headers"), "Origin, X-Requested-With, Content-Type, Accept");
+                            exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Headers"), "Origin, X-Requested-With, Content-Type, Accept, X-IOTA-API-Version");
                             exchange.getResponseSender().close();
                             return;
                         }
@@ -771,10 +771,12 @@ public class API {
                         TransactionViewModel.BRANCH_TRANSACTION_TRINARY_SIZE);
 
                 //attachment fields: tag and timestamps
-                //tag - copy the obsolete tag to the attachment tag field
-                System.arraycopy(transactionTrits, TransactionViewModel.OBSOLETE_TAG_TRINARY_OFFSET,
+                //tag - copy the obsolete tag to the attachment tag field only if tag isn't set.
+                if(Arrays.stream(transactionTrits, TransactionViewModel.TAG_TRINARY_OFFSET, TransactionViewModel.TAG_TRINARY_OFFSET + TransactionViewModel.TAG_TRINARY_SIZE).allMatch(s -> s == 0)) {
+                    System.arraycopy(transactionTrits, TransactionViewModel.OBSOLETE_TAG_TRINARY_OFFSET,
                         transactionTrits, TransactionViewModel.TAG_TRINARY_OFFSET,
                         TransactionViewModel.TAG_TRINARY_SIZE);
+                }
 
                 Converter.copyTrits(timestamp,transactionTrits,TransactionViewModel.ATTACHMENT_TIMESTAMP_TRINARY_OFFSET,
                         TransactionViewModel.ATTACHMENT_TIMESTAMP_TRINARY_SIZE);
