@@ -118,6 +118,9 @@ public class TransactionViewModel {
         getBranchTransactionHash();
         getBundleHash();
         getTagValue();
+        getObsoleteTagValue();
+        setAttachmentData();
+        setMetadata();
         if(hash.equals(Hash.NULL_HASH)) {
             return false;
         }
