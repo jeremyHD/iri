@@ -91,10 +91,10 @@ public class API {
     private final int maxGetTrytes;
     private final int maxBodyLength;
     private final double newTransactionsRateLimit;
-    private final double newTransactionsLimit;
     private final static String overMaxErrorMessage = "Could not complete request";
     private final static String invalidParams = "Invalid parameters";
 
+    private AtomicInteger newTransactionsLimit;
     private HashMap<InetAddress,AtomicInteger> broadcastStoreCounters;
     private AtomicLong broadcastStoreTimer;
 
@@ -111,9 +111,10 @@ public class API {
         maxRequestList = instance.configuration.integer(DefaultConfSettings.MAX_REQUESTS_LIST);
         maxGetTrytes = instance.configuration.integer(DefaultConfSettings.MAX_GET_TRYTES);
         maxBodyLength = instance.configuration.integer(DefaultConfSettings.MAX_BODY_LENGTH);
-        newTransactionsRateLimit = instance.configuration.doubling(Configuration.DefaultConfSettings.NEW_TX_LIMIT.name());
 
-        newTransactionsLimit = (newTransactionsRateLimit * Neighbor.newTransactionsWindow) / 1000;
+        newTransactionsRateLimit = instance.configuration.doubling(Configuration.DefaultConfSettings.API_NEW_TX_LIMIT.name());
+        newTransactionsLimit = new AtomicInteger(0);
+        setApiRateLimit(newTransactionsRateLimit);
         broadcastStoreCounters = new HashMap<>();
         broadcastStoreTimer = new AtomicLong(0);
     }
@@ -326,6 +327,15 @@ public class API {
                     final List<String> transactions = getParameterAsList(request,"tails", HASH_SIZE);
                     return checkConsistencyStatement(transactions);
                 }
+                case "setApiRateLimit": {
+                    final double limit = getParameterAsDouble(request, "limit");
+                    if(limit < 0) {
+                        return ErrorResponse.create("Invalid limit input");
+                    }
+                    setApiRateLimit(limit);
+                    log.info("Setting API Rate limit to: " + limit + " txs / sec" );
+                    return AbstractResponse.createEmptyResponse();
+                }
                 default: {
                     AbstractResponse response = ixi.processCommand(command, request);
                     return response == null ?
@@ -344,7 +354,8 @@ public class API {
     }
 
     private boolean isBelowNewTransactionLimit(InetAddress sourceAddress, int size) {
-        if (newTransactionsLimit == 0) {
+        int newTransactionsLimitInt = newTransactionsLimit.get();
+        if (newTransactionsLimitInt == 0) {
             return true;
         }
 
@@ -354,10 +365,10 @@ public class API {
             broadcastStoreTimer.set(now);
         }
 
-        if(broadcastStoreCounters.putIfAbsent(sourceAddress, new AtomicInteger(size)) != null) {
-            return size < newTransactionsLimit;
+        if(broadcastStoreCounters.putIfAbsent(sourceAddress, new AtomicInteger(size)) == null) { //not already in counter
+            return size < newTransactionsLimitInt;
         } else {
-            return broadcastStoreCounters.get(sourceAddress).addAndGet(size) < newTransactionsLimit;
+            return broadcastStoreCounters.get(sourceAddress).addAndGet(size) < newTransactionsLimitInt;
         }
     }
     private AbstractResponse checkConsistencyStatement(List<String> transactionsList) throws Exception {
@@ -396,6 +407,18 @@ public class API {
 
         return CheckConsistency.create(state,info);
     }
+    
+    private double getParameterAsDouble(Map<String, Object> request, String paramName) throws ValidationException {
+        validateParamExists(request, paramName);
+        final double result;
+        try {
+                result = ((Double) request.get(paramName));
+            } catch (ClassCastException e) {
+                throw new ValidationException("Invalid " + paramName + " input");
+            }
+        return result;
+    }
+
 
     private int getParameterAsInt(Map<String, Object> request, String paramName) throws ValidationException {
         validateParamExists(request, paramName);
@@ -977,6 +1000,11 @@ public class API {
         Matcher matcher = trytesPattern.matcher(trytes);
         return matcher.matches();
     }
+    
+    public void setApiRateLimit(double apiRateLimit) {
+        newTransactionsLimit.set((int) ((apiRateLimit * Neighbor.newTransactionsWindow) / 1000));
+    }
+                
 
     private static void setupResponseHeaders(final HttpServerExchange exchange) {
         final HeaderMap headerMap = exchange.getResponseHeaders();

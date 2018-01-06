@@ -48,6 +48,7 @@ public class Configuration {
         MAIN_DB, EXPORT, // exports transaction trytes to filesystem
         SEND_LIMIT,
         NEW_TX_LIMIT,
+        API_NEW_TX_LIMIT,
         MAX_PEERS,
         DNS_RESOLUTION_ENABLED,
         DNS_REFRESHER_ENABLED,
@@ -68,8 +69,8 @@ public class Configuration {
         ZMQ_IPC,
         ZMQ_THREADS,
         Q_SIZE_NODE,
-        LRU_SIZE_HASHES,
-        LRU_SIZE_BYTES,
+        P_DROP_CACHE_ENTRY,
+        CACHE_SIZE_BYTES,
     }
 
     {
@@ -98,6 +99,7 @@ public class Configuration {
         conf.put(DefaultConfSettings.EXPORT.name(), "false");
         conf.put(DefaultConfSettings.SEND_LIMIT.name(), "-1.0");
         conf.put(DefaultConfSettings.NEW_TX_LIMIT.name(), "0.0");
+        conf.put(DefaultConfSettings.API_NEW_TX_LIMIT.name(), "0.0");
         conf.put(DefaultConfSettings.MAX_PEERS.name(), "0");
         conf.put(DefaultConfSettings.DNS_REFRESHER_ENABLED.name(), "true");
         conf.put(DefaultConfSettings.DNS_RESOLUTION_ENABLED.name(), "true");
@@ -122,8 +124,8 @@ public class Configuration {
         conf.put(DefaultConfSettings.ZMQ_THREADS.name(), "2");
 
         conf.put(DefaultConfSettings.Q_SIZE_NODE.name(), "1000");
-        conf.put(DefaultConfSettings.LRU_SIZE_HASHES.name(), "5000");
-        conf.put(DefaultConfSettings.LRU_SIZE_BYTES.name(), "15000");
+        conf.put(DefaultConfSettings.P_DROP_CACHE_ENTRY.name(), "0.02");
+        conf.put(DefaultConfSettings.CACHE_SIZE_BYTES.name(), "15000");
 
     }
 
