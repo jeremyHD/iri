@@ -47,6 +47,7 @@ public class Snapshot {
                     initialState.put(new Hash(key), Long.valueOf(value));
                 }
             }
+            /*
             { // Check snapshot signature
                 trits = new int[Curl.HASH_LENGTH];
                 curl.squeeze(trits, 0, Curl.HASH_LENGTH);
@@ -80,6 +81,7 @@ public class Snapshot {
                     throw new RuntimeException("Snapshot signature failed.");
                 }
             }
+            */
         } catch (IOException e) {
             System.out.println("Failed to load snapshot.");
             System.exit(-1);
