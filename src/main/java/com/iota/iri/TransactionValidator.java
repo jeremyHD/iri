@@ -53,7 +53,7 @@ public class TransactionValidator {
         }
         //lowest allowed MWM encoded in 46 bytes.
         if (MIN_WEIGHT_MAGNITUDE<13){
-            MIN_WEIGHT_MAGNITUDE = 13;
+            MIN_WEIGHT_MAGNITUDE = 11;
         }
 
         newSolidThread = new Thread(spawnSolidTransactionsPropagation(), "Solid TX cascader");
